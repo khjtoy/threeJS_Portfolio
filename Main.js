@@ -3,6 +3,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { CharacterControls } from './CharacterControls.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KeyDisplay } from './Utils.js';
+import { Domino } from './Domino.js';
+import { Glass } from './GlassObj.js'
 
 // Scene Setting
 const scene = new THREE.Scene();
@@ -19,6 +21,9 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.shadowMap.enabled = true;
+//renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.8
 
 // Controls Setting
 const orbitControls = new OrbitControls(camera, renderer.domElement);
@@ -55,6 +60,12 @@ new GLTFLoader().load('models/Soldier.glb', function (gltf) {
     characterControls = new CharacterControls(model, mixer, animationsMap, orbitControls, camera, floor,  'Idle')
 });
 
+// Domino Setting
+var domino = new Domino(scene, floor, camera)
+
+// glass Setting
+var glass = new Glass(scene, renderer)
+
 // Key Setting
 const keysPressed = { }
 const keyDisplayQueue = new KeyDisplay();
@@ -82,12 +93,21 @@ document.addEventListener('keyup', (event) => {
     (keysPressed)[event.key.toLowerCase()] = false
 }, false);
 
+
 const clock = new THREE.Clock();
 // Update
 function animate() {
     let mixerUpdateDelta = clock.getDelta();
     if (characterControls) {
         characterControls.update(mixerUpdateDelta, keysPressed);
+    }
+    if(domino)
+    {
+        domino.update(mixerUpdateDelta)
+    }
+    if(glass)
+    {
+        glass.update()
     }
     orbitControls.update()
     renderer.render(scene, camera);
@@ -159,5 +179,10 @@ function light() {
     dirLight.shadow.camera.far = 200;
     dirLight.shadow.mapSize.width = 4096;
     dirLight.shadow.mapSize.height = 4096;
+
+    const dirLight2 = new THREE.SpotLight(0xFF0000, 2) 
+    dirLight.position.set(- 60, 100, - 10);
+
     scene.add(dirLight);
+    scene.add(dirLight2)
 }
